@@ -26,6 +26,9 @@ RUN pip3 install \
   python-gettext==4.0 \
   urllib3==1.25.9
 
+# Include patch file into docker image
+COPY duplicity-s3-unfreeze-at-once.patch /tmp/duplicity-s3-unfreeze-at-once.patch
+
 # Download and install duplicity
 RUN DUPLICITY_VERSION=0.8.14 \
       && DUPLICITY_URL=https://code.launchpad.net/duplicity/0.8-series/$DUPLICITY_VERSION/+download/duplicity-$DUPLICITY_VERSION.tar.gz \
@@ -34,9 +37,11 @@ RUN DUPLICITY_VERSION=0.8.14 \
       && tar xf duplicity-$DUPLICITY_VERSION.tar.gz \
       && rm -f duplicity-$DUPLICITY_VERSION.tar.gz \
       && cd duplicity-$DUPLICITY_VERSION \
+      && patch -p1 < /tmp/duplicity-s3-unfreeze-at-once.patch \
       && python3 setup.py install --prefix=/usr/local \
       && cd .. \
-      && rm -rf duplicity-$DUPLICITY_VERSION
+      && rm -rf duplicity-$DUPLICITY_VERSION \
+      && rm -f /tmp/duplicity-s3-unfreeze-at-once.patch
 
 # Remove dependencies that were only necessary for installation
 RUN apt-get remove --purge --autoremove \
